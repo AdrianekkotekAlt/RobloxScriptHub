@@ -45,7 +45,6 @@ def generate():
     return jsonify({"key": key})
 
 @app.route("/create-session", methods=["POST"])
-expires = entry["expires"]
 def create_session():
     data = request.json
     key = data.get("key")
@@ -61,25 +60,24 @@ def create_session():
     if time.time() > entry["expires"]:
         return jsonify({"valid": False}), 403
 
-    if entry.get("activated") and entry.get("userId") != userId:
-        return jsonify({"valid": False}), 403
-
-    # bind key to user
-    entry["activated"] = True
-    entry["userId"] = userId
-    save_db(db)
-
-    # create session token
+    import secrets
     token = secrets.token_hex(16)
+
+    # session expires when key expires OR 1 hour max
+    session_expiry = min(
+        time.time() + 3600,
+        entry["expires"]
+    )
 
     sessions[token] = {
         "userId": userId,
-        "expires": time.time() + 3600  # 1 hour session
+        "expires": session_expiry
     }
 
     return jsonify({
         "valid": True,
-        "token": token
+        "token": token,
+        "expires": session_expiry
     })
 
 @app.route("/validate", methods=["POST"])
