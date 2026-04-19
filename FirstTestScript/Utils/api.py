@@ -117,6 +117,25 @@ def validate():
         print("ERROR:", e)
         return jsonify({"valid": False})
 
+@app.route("/validate-session", methods=["POST"])
+def validate_session():
+    data = request.json
+    token = data.get("token")
+    userId = data.get("userId")
+
+    if token not in sessions:
+        return jsonify({"valid": False})
+
+    session = sessions[token]
+
+    if time.time() > session["expires"]:
+        return jsonify({"valid": False})
+
+    if session["userId"] != userId:
+        return jsonify({"valid": False})
+
+    return jsonify({"valid": True})
+
 # IMPORTANT for Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 3000))
