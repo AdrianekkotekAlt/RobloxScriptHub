@@ -45,6 +45,7 @@ def generate():
     return jsonify({"key": key})
 
 @app.route("/create-session", methods=["POST"])
+expires = entry["expires"]
 def create_session():
     data = request.json
     key = data.get("key")
