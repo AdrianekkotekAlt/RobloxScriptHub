@@ -87,39 +87,32 @@ def create_session():
 
 @app.route("/validate", methods=["POST"])
 def validate():
-    try:
-        data = request.json
-        key = data.get("key")
-        userId = data.get("userId")
+    data = request.json
+    key = data.get("key")
+    userId = data.get("userId")
 
-        db = load_db()
+    db = load_db()
 
-        # key does not exist
-        if key not in db:
-            return jsonify({"valid": False})
-
-        entry = db[key]
-
-        # expired check
-        if time.time() > entry["expires"]:
-            return jsonify({"valid": False})
-
-        # first activation
-        if not entry.get("activated", False):
-            entry["activated"] = True
-            entry["userId"] = userId
-            save_db(db)
-            return jsonify({"valid": True})
-
-        # same user allowed
-        if entry.get("userId") == userId:
-            return jsonify({"valid": True})
-
+    if key not in db:
         return jsonify({"valid": False})
 
-    except Exception as e:
-        print("ERROR:", e)
-        return jsonify({"valid": False})
+    entry = db[key]
+
+    remaining = int(entry["expires"] - time.time())
+
+    if remaining <= 0:
+        return jsonify({"valid": False, "reason": "expired"})
+
+    if not entry.get("activated"):
+        entry["activated"] = True
+        entry["userId"] = userId
+        save_db(db)
+
+    return jsonify({
+        "valid": True,
+        "total_days": entry["days"],
+        "remaining_seconds": remaining
+    })
 
 @app.route("/validate-session", methods=["POST"])
 def validate_session():
