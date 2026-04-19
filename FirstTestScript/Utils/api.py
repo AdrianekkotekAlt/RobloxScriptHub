@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import time, json, os
 
+sessions = {}
+
 app = Flask(__name__)
 DB_FILE = "FirstTestScript/Utils/keys.json"
 
