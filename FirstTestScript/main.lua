@@ -1,12 +1,11 @@
 local HttpService = game:GetService("HttpService")
 
-local API = "https://robloxscripthub-kfz9.onrender.com/validate"
+local API = "https://robloxscripthub-kfz9.onrender.com/validate-session"
 
--- must be passed or rechecked
-local key = getgenv().script_key
+local token = getgenv().session_token
 
-if not key then
-    return print("No key provided")
+if not token then
+    return print("No session token")
 end
 
 local res = request({
@@ -14,7 +13,7 @@ local res = request({
     Method = "POST",
     Headers = {["Content-Type"] = "application/json"},
     Body = HttpService:JSONEncode({
-        key = key,
+        token = token,
         userId = game.Players.LocalPlayer.UserId
     })
 })
@@ -22,8 +21,7 @@ local res = request({
 local data = HttpService:JSONDecode(res.Body)
 
 if not data.valid then
-    return print("Blocked (invalid session)")
+    return print("Session invalid")
 end
 
--- REAL SCRIPT STARTS HERE
-print("Main script loaded")
+print("Main script fully unlocked")
