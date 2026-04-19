@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import secrets
 import time, json, os
 
 sessions = {}
@@ -42,6 +43,43 @@ def generate():
     save_db(db)
 
     return jsonify({"key": key})
+
+@app.route("/create-session", methods=["POST"])
+def create_session():
+    data = request.json
+    key = data.get("key")
+    userId = data.get("userId")
+
+    db = load_db()
+
+    if key not in db:
+        return jsonify({"valid": False}), 403
+
+    entry = db[key]
+
+    if time.time() > entry["expires"]:
+        return jsonify({"valid": False}), 403
+
+    if entry.get("activated") and entry.get("userId") != userId:
+        return jsonify({"valid": False}), 403
+
+    # bind key to user
+    entry["activated"] = True
+    entry["userId"] = userId
+    save_db(db)
+
+    # create session token
+    token = secrets.token_hex(16)
+
+    sessions[token] = {
+        "userId": userId,
+        "expires": time.time() + 3600  # 1 hour session
+    }
+
+    return jsonify({
+        "valid": True,
+        "token": token
+    })
 
 @app.route("/validate", methods=["POST"])
 def validate():
