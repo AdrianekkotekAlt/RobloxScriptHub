@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import time, json, os
 
 app = Flask(__name__)
-DB_FILE = "keys.json"
+DB_FILE = "FirstTestScript/Utils/keys.json"
 
 def load_db():
     if not os.path.exists(DB_FILE):
