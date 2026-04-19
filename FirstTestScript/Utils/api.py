@@ -21,6 +21,7 @@ def save_db(db):
 def generate():
     data = request.json
     admin = data.get("admin")
+    days = data.get("days", 1)
 
     if admin != "YOUR_SECRET_PASSWORD":
         return jsonify({"error": "unauthorized"}), 403
@@ -35,14 +36,18 @@ def generate():
     db = load_db()
 
     db[key] = {
-        "expires": int(time.time() + 86400),
+        "expires": int(time.time() + days * 86400),
         "activated": False,
-        "userId": None
+        "userId": None,
+        "days": days
     }
 
     save_db(db)
 
-    return jsonify({"key": key})
+    return jsonify({
+        "key": key,
+        "days": days
+    })
 
 @app.route("/create-session", methods=["POST"])
 def create_session():
