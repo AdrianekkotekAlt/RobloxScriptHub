@@ -1,10 +1,6 @@
 from flask import Flask, request, jsonify
 import time, json, os
 
-@app.route("/")
-def home():
-    return "API is running"
-
 app = Flask(__name__)
 DB_FILE = "FirstTestScript/Utils/keys.json"
 
@@ -20,30 +16,39 @@ def save_db(db):
 
 @app.route("/validate", methods=["POST"])
 def validate():
-    data = request.json
-    key = data.get("key")
-    userId = data.get("userId")
+    try:
+        data = request.json
+        key = data.get("key")
+        userId = data.get("userId")
 
-    db = load_db()
+        db = load_db()
 
-    if key not in db:
+        # key does not exist
+        if key not in db:
+            return jsonify({"valid": False})
+
+        entry = db[key]
+
+        # expired check
+        if time.time() > entry["expires"]:
+            return jsonify({"valid": False})
+
+        # first activation
+        if not entry.get("activated", False):
+            entry["activated"] = True
+            entry["userId"] = userId
+            save_db(db)
+            return jsonify({"valid": True})
+
+        # same user allowed
+        if entry.get("userId") == userId:
+            return jsonify({"valid": True})
+
         return jsonify({"valid": False})
 
-    entry = db[key]
-
-    if time.time() > entry["expires"]:
+    except Exception as e:
+        print("ERROR:", e)
         return jsonify({"valid": False})
-
-    if not entry["activated"]:
-        entry["activated"] = True
-        entry["userId"] = userId
-        save_db(db)
-        return jsonify({"valid": True})
-
-    if entry["userId"] == userId:
-        return jsonify({"valid": True})
-
-    return jsonify({"valid": False})
 
 # IMPORTANT for Render
 if __name__ == "__main__":
