@@ -68,7 +68,6 @@ def create_session():
     import secrets
     token = secrets.token_hex(16)
 
-    # session expires when key expires OR 1 hour max
     session_expiry = min(
         time.time() + 3600,
         entry["expires"]
@@ -98,20 +97,20 @@ def validate():
 
     entry = db[key]
 
-    remaining = int(entry["expires"] - time.time())
+    if time.time() > entry["expires"]:
+        return jsonify({"valid": False})
 
-    if remaining <= 0:
-        return jsonify({"valid": False, "reason": "expired"})
-
-    if not entry.get("activated"):
-        entry["activated"] = True
+    if entry["userId"] is None:
         entry["userId"] = userId
+        entry["activated"] = True
         save_db(db)
+
+    if entry["userId"] != userId:
+        return jsonify({"valid": False})
 
     return jsonify({
         "valid": True,
-        "total_days": entry["days"],
-        "remaining_seconds": remaining
+        "remaining": int(entry["expires"] - time.time())
     })
 
 @app.route("/validate-session", methods=["POST"])
