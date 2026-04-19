@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
 import time, json, os
 
+@app.route("/")
+def home():
+    return "API is running"
+
 app = Flask(__name__)
 DB_FILE = "FirstTestScript/Utils/keys.json"
 
