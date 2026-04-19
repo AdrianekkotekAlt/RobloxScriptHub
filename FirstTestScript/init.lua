@@ -1,8 +1,8 @@
 local HttpService = game:GetService("HttpService")
 
-local API = "https://robloxscripthub-kfz9.onrender.com/validate"
+local API = "https://robloxscripthub-kfz9.onrender.com/create-session"
 
-local key = "USER_INPUT_KEY"
+local key = "YOUR_KEY"
 
 local res = request({
     Url = API,
@@ -16,11 +16,14 @@ local res = request({
 
 local data = HttpService:JSONDecode(res.Body)
 
-if data.valid then
-    print("Key valid")
-
-    -- load main script ONLY after validation
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/.../main.lua"))()
-else
-    print("Invalid key")
+if not data.valid then
+    return print("Invalid key")
 end
+
+-- STORE SESSION TOKEN
+getgenv().session_token = data.token
+
+print("Session created")
+
+-- load main script
+loadstring(game:HttpGet("https://raw.githubusercontent.com/.../main.lua"))()
