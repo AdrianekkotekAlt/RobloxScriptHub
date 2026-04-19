@@ -14,6 +14,33 @@ def save_db(db):
     with open(DB_FILE, "w") as f:
         json.dump(db, f, indent=4)
 
+@app.route("/generate", methods=["POST"])
+def generate():
+    data = request.json
+    admin = data.get("admin")
+
+    if admin != "YOUR_SECRET_PASSWORD":
+        return jsonify({"error": "unauthorized"}), 403
+
+    import random, string, time
+
+    key = '-'.join(
+        ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+        for _ in range(4)
+    )
+
+    db = load_db()
+
+    db[key] = {
+        "expires": int(time.time() + 86400),
+        "activated": False,
+        "userId": None
+    }
+
+    save_db(db)
+
+    return jsonify({"key": key})
+
 @app.route("/validate", methods=["POST"])
 def validate():
     try:
